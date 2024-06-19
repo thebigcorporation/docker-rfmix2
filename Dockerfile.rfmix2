@@ -1,0 +1,27 @@
+ARG BASE
+FROM $BASE as builder
+
+RUN apt -y update -qq && DEBIAN_FRONTEND=noninteractive apt -y install \
+        --no-install-recommends --no-install-suggests \
+		autoconf \
+		automake \
+		gawk \
+		g++ \
+		gcc \
+		git \
+		clang \
+		make \
+		software-properties-common \
+		ssh
+
+WORKDIR /usr/src
+
+RUN git clone -b docker-um https://github.com/hihg-um/rfmix.git && cd rfmix && \
+	ls -la && git branch && git status && autoupdate && autoreconf -i && \
+	./configure && make && make install
+
+FROM $BASE
+
+COPY --from=builder /usr/local/bin/rfmix /usr/local/bin/simulate \
+       /usr/local/bin/
+
